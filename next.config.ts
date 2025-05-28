@@ -16,7 +16,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Added for flexibility with potential dynamic image sources during development
+      // For production, this should be reviewed and locked down.
+      // {
+      //   protocol: 'https',
+      //   hostname: '**', 
+      // },
+      // {
+      //   protocol: 'http',
+      //   hostname: '**',
+      // }
     ],
+     domains: ['localhost'], // For src="blob:http://localhost..." from URL.createObjectURL
   },
 };
 
