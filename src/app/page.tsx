@@ -11,7 +11,7 @@ export default function Home() {
         <div className="flex items-center justify-center sm:justify-start space-x-3">
           <Car className="h-10 w-10 text-primary" />
           <h1 className="text-3xl sm:text-4xl font-bold text-primary">
-            AutoFault Reporter
+            OnMechanics Reporter
           </h1>
         </div>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
@@ -20,7 +20,6 @@ export default function Home() {
       </header>
       <main className="flex flex-col items-center justify-center flex-grow text-center">
         <div className="space-y-4">
-          <p className="text-xl text-foreground">Reports Submitted: <span className="font-semibold">0</span></p>
           <Link href="/report">
  <Button size="lg">
  Create New Report

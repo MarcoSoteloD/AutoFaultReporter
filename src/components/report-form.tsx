@@ -55,7 +55,6 @@ const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
   const faultDescriptionValue = watch("faultDescription");
 
   useEffect(() => {
-    // Clean up Object URLs
     return () => {
       photos.forEach(photo => URL.revokeObjectURL(photo.url));
     };
@@ -64,20 +63,22 @@ const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
-      const newPhotoPreviews = newFiles.map(file => ({
-        file,
-        url: URL.createObjectURL(file),
-
-      }));      
- setPhotos(prevPhotos => { if (prevPhotos.length + newFiles.length > 5) {
+      if (photos.length >= 5) {
         toast({
           title: "Photo Limit Reached",
           description: "You can upload a maximum of 5 photos.",
- variant: "destructive",
+          variant: "destructive",
         });
+        return;
       }
-        return [...prevPhotos, ...newPhotoPreviews].slice(0, 5); // Limit to 5 photos
-      });
+
+      const allowedNewPhotos = newFiles.slice(0, 5 - photos.length);
+      const newPreviews = allowedNewPhotos.map(file => ({
+        file,
+        url: URL.createObjectURL(file),
+      }));
+      setPhotos(prev => [...prev, ...newPreviews]);
+
     }
   };
 
@@ -198,7 +199,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
         setPhotos([]); // Effect hook will clean up URLs
         setLocation(null); // Clear location
         setSignaturePadKey(prevKey => prevKey + 1); // Increment key to force remount of signature pads
- if (onReportSubmitSuccess) { onReportSubmitSuccess(); }
+        if (onReportSubmitSuccess) { onReportSubmitSuccess(); }
       } else {
         toast({ title: "Submission Failed", description: result.message, variant: "destructive" });
       }
@@ -258,7 +259,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
             {isFetchingAISuggestion ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}
             Suggest Description
           </Button>
-           {faultDescriptionValue?.length > 0 && <p className="text-xs text-muted-foreground">Clear current description to enable AI suggestion.</p>}
+          {faultDescriptionValue?.length > 0 && <p className="text-xs text-muted-foreground">Clear current description to enable AI suggestion.</p>}
         </CardContent>
       </Card>
 
@@ -283,20 +284,20 @@ const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
           <div>
             <Label htmlFor="photos">Photos (max 5)</Label>
             <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md border-input hover:border-primary transition-colors">
-                <div className="space-y-1 text-center">
-                    <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <div className="flex text-sm text-muted-foreground">
-                        <label
-                            htmlFor="photos"
-                            className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-ring"
-                        >
-                            <span>Upload files</span>
-                            <Input id="photos" type="file" className="sr-only" accept="image/*" multiple onChange={handlePhotoChange} disabled={photos.length >= 5} />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB each</p>
+              <div className="space-y-1 text-center">
+                <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
+                <div className="flex text-sm text-muted-foreground">
+                  <label
+                    htmlFor="photos"
+                    className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-ring"
+                  >
+                    <span>Upload files</span>
+                    <Input id="photos" type="file" className="sr-only" accept="image/*" multiple onChange={handlePhotoChange} disabled={photos.length >= 5} />
+                  </label>
+                  <p className="pl-1">or drag and drop</p>
                 </div>
+                <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB each</p>
+              </div>
             </div>
 
             {photos.length > 0 && (
@@ -342,7 +343,7 @@ const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
           </div>
         </CardContent>
       </Card>
-      
+
       <Button type="submit" size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold py-3 text-base" disabled={isSubmitting}>
         {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
         Send Report

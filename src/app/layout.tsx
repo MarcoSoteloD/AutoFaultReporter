@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'AutoFault Reporter',
+  title: 'OnMechanics Reporter',
   description: 'Report vehicle faults efficiently on-site.',
 };
 
