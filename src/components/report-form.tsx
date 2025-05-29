@@ -31,7 +31,11 @@ interface PhotoPreview {
   url: string;
 }
 
-const ReportForm: React.FC = () => {
+interface ReportFormProps {
+  onReportSubmitSuccess?: () => void;
+}
+
+const ReportForm: React.FC<ReportFormProps> = ({ onReportSubmitSuccess }) => {
   const { toast } = useToast();
   const [ownerSignature, setOwnerSignature] = useState<string | null>(null);
   const [technicianSignature, setTechnicianSignature] = useState<string | null>(null);
@@ -40,7 +44,9 @@ const ReportForm: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [handleSubmitAttempted, setHandleSubmitAttempted] = useState(false);
   const [isFetchingAISuggestion, setIsFetchingAISuggestion] = useState(false);
+  const [signaturePadKey, setSignaturePadKey] = useState(0); // Key to reset signature pads
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
@@ -61,15 +67,17 @@ const ReportForm: React.FC = () => {
       const newPhotoPreviews = newFiles.map(file => ({
         file,
         url: URL.createObjectURL(file),
-      }));
-      setPhotos(prevPhotos => [...prevPhotos, ...newPhotoPreviews].slice(0, 5)); // Limit to 5 photos
-       if (prevPhotos.length + newFiles.length > 5) {
+
+      }));      
+ setPhotos(prevPhotos => { if (prevPhotos.length + newFiles.length > 5) {
         toast({
           title: "Photo Limit Reached",
           description: "You can upload a maximum of 5 photos.",
-          variant: "destructive",
+ variant: "destructive",
         });
       }
+        return [...prevPhotos, ...newPhotoPreviews].slice(0, 5); // Limit to 5 photos
+      });
     }
   };
 
@@ -81,6 +89,7 @@ const ReportForm: React.FC = () => {
       }
       return prevPhotos.filter((_, i) => i !== index);
     });
+
   };
 
   const handleCaptureLocation = () => {
@@ -143,6 +152,7 @@ const ReportForm: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<ReportFormValues> = async (data) => {
+    setHandleSubmitAttempted(true);
     setIsSubmitting(true);
 
     if (!ownerSignature) {
@@ -177,8 +187,18 @@ const ReportForm: React.FC = () => {
     try {
       const result = await submitReportAction(reportData);
       if (result.success) {
-        toast({ title: "Report Submitted", description: `${result.message} (ID: ${result.reportId})`, variant: "default" });
-        // Optionally reset form here
+        toast({ title: "Report Submitted", description: `Report ID: ${result.reportId}`, variant: "default" });
+        // Reset form state
+        setValue("ownerName", "");
+        setValue("phoneNumber", "");
+        setValue("licensePlate", "");
+        setValue("faultDescription", "");
+        setOwnerSignature(null);
+        setTechnicianSignature(null);
+        setPhotos([]); // Effect hook will clean up URLs
+        setLocation(null); // Clear location
+        setSignaturePadKey(prevKey => prevKey + 1); // Increment key to force remount of signature pads
+ if (onReportSubmitSuccess) { onReportSubmitSuccess(); }
       } else {
         toast({ title: "Submission Failed", description: result.message, variant: "destructive" });
       }
@@ -312,12 +332,12 @@ const ReportForm: React.FC = () => {
             <div>
               <Label className="block text-center mb-2 font-medium">Owner Signature</Label>
               <SignaturePad onSignatureChange={setOwnerSignature} />
-              {!ownerSignature && handleSubmitCount > 0 && <p className="text-sm text-destructive mt-1 text-center">Owner signature is required.</p>}
+              {!ownerSignature && handleSubmitAttempted && <p className="text-sm text-destructive mt-1 text-center">Owner signature is required.</p>}
             </div>
             <div>
               <Label className="block text-center mb-2 font-medium">Technician Signature</Label>
               <SignaturePad onSignatureChange={setTechnicianSignature} />
-              {!technicianSignature && handleSubmitCount > 0 && <p className="text-sm text-destructive mt-1 text-center">Technician signature is required.</p>}
+              {!technicianSignature && handleSubmitAttempted && <p className="text-sm text-destructive mt-1 text-center">Technician signature is required.</p>}
             </div>
           </div>
         </CardContent>
@@ -331,19 +351,5 @@ const ReportForm: React.FC = () => {
   );
 };
 
-// Dummy variable to track submit attempts for showing signature errors
-let handleSubmitCount = 0;
-const originalHandleSubmit = ReportForm.prototype ? ReportForm.prototype.handleSubmit : null;
-if (typeof originalHandleSubmit === 'function') {
-    ReportForm.prototype.handleSubmit = function(...args: any[]) {
-        handleSubmitCount++;
-        return originalHandleSubmit.apply(this, args);
-    } as any;
-} else {
-    // For environments where prototype might not be available as expected (e.g. HMR dev)
-    // This is a simplified approach, proper context handling would be more robust.
-    const originalOnSubmit = ReportForm; // Placeholder, needs actual component instance or static method
-}
-
-
 export default ReportForm;
+

@@ -1,5 +1,8 @@
-import ReportForm from '@/components/report-form';
+'use client';
+
 import { Car } from 'lucide-react';
+import { Button } from '@/components/ui/button'; // Assuming you have a Button component in ui
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -15,8 +18,15 @@ export default function Home() {
           Easily capture and submit vehicle fault reports on-site.
         </p>
       </header>
-      <main className="w-full max-w-3xl">
-        <ReportForm />
+      <main className="flex flex-col items-center justify-center flex-grow text-center">
+        <div className="space-y-4">
+          <p className="text-xl text-foreground">Reports Submitted: <span className="font-semibold">0</span></p>
+          <Link href="/report">
+ <Button size="lg">
+ Create New Report
+ </Button>
+ </Link>
+ </div>
       </main>
       <footer className="w-full max-w-3xl mt-8 text-center text-sm text-muted-foreground">
         <p>&copy; {new Date().getFullYear()} AutoFault Reporter. All rights reserved.</p>

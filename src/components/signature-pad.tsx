@@ -16,7 +16,7 @@ const SignaturePad: React.FC<SignaturePadProps> = ({
   width = 350,
   height = 150,
   onSignatureChange,
-  backgroundColor = 'hsl(var(--card))', // Use card background from theme
+  backgroundColor = '#FFFFFF', // Use card background from theme
   penColor = 'hsl(var(--foreground))', // Use foreground color from theme
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
